@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loan Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F5F3EE;
+    --surface: #FFFFFF;
+    --surface2: #F0EDE7;
+    --surface3: #E8E5DF;
+    --border: rgba(0,0,0,0.08);
+    --border-med: rgba(0,0,0,0.13);
+    --text: #1A1A18;
+    --text2: #5C5B57;
+    --text3: #9B9A95;
+    --green: #3D7A5C;
+    --green-light: #EAF3EE;
+    --amber: #A05C2A;
+    --amber-light: #FDF2E8;
+    --blue: #2A5FA0;
+    --blue-light: #EBF2FC;
+    --red: #C0392B;
+    --accent: #2A5FA0;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .container { max-width: 680px; margin: 0 auto; }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 0.25rem;
+  }
+  .subtitle { font-size: 13px; color: var(--text3); margin-bottom: 1.75rem; }
+
+  /* Tab switcher */
+  .tabs {
+    display: flex;
+    background: var(--surface3);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    margin-bottom: 1.25rem;
+  }
+  .tab {
+    flex: 1; padding: 9px 0; font-size: 13px; font-weight: 500;
+    border: none; background: transparent; border-radius: 9px;
+    cursor: pointer; color: var(--text2); transition: all .2s ease;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1), 0 0 0 0.5px rgba(0,0,0,0.05);
+  }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 0.875rem;
+    box-shadow: var(--shadow);
+  }
+
+  .section-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11.5px; color: var(--text2); font-weight: 500; }
+
+  .field input, .field select {
+    width: 100%;
+    padding: 9px 11px;
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 400;
+    border: 0.5px solid var(--border-med);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    transition: border-color .15s, box-shadow .15s;
+    -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(42,95,160,0.1);
+    background: #fff;
+  }
+  .field input[readonly] {
+    color: var(--text3);
+    font-style: italic;
+    cursor: default;
+    background: var(--surface3);
+  }
+  .field input[readonly]:focus { border-color: var(--border-med); box-shadow: none; background: var(--surface3); }
+  .field .hint { font-size: 10.5px; color: var(--text3); margin-top: 1px; }
+
+  /* Pill toggle */
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 0.875rem; }
+  .toggle-label { font-size: 12px; color: var(--text2); font-weight: 500; white-space: nowrap; }
+  .pill-toggle {
+    display: flex;
+    background: var(--surface3);
+    border-radius: 20px;
+    padding: 3px;
+    gap: 2px;
+  }
+  .pill-toggle button {
+    padding: 5px 13px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    border-radius: 16px;
+    cursor: pointer;
+    color: var(--text2);
+    transition: all .18s;
+    white-space: nowrap;
+  }
+  .pill-toggle button.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  /* Metrics */
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 0.875rem; }
+  .metric {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .metric .m-label { font-size: 10.5px; color: var(--text3); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 5px; }
+  .metric .m-val { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; line-height: 1; margin-bottom: 4px; }
+  .metric .m-sub { font-size: 10.5px; color: var(--text3); }
+
+  /* Savings card */
+  .savings-card {
+    background: var(--green-light);
+    border: 0.5px solid rgba(61,122,92,0.2);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 0.875rem;
+    display: none;
+  }
+  .savings-card .section-label { color: var(--green); }
+  .savings-card .metric { background: rgba(255,255,255,0.7); border-color: rgba(61,122,92,0.15); }
+  .savings-card .metric .m-val { color: var(--green); }
+
+  /* Bar */
+  .bar-track { height: 6px; background: var(--surface3); border-radius: 3px; overflow: hidden; margin-bottom: 6px; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width .4s cubic-bezier(.4,0,.2,1); }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text2); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend strong { font-weight: 500; color: var(--text); font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  .chart-wrap { margin-top: 1.25rem; height: 170px; position: relative; }
+
+  /* Table */
+  .schedule-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .schedule-table th {
+    padding: 7px 8px;
+    text-align: right;
+    color: var(--text3);
+    font-weight: 500;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .schedule-table th:first-child { text-align: left; }
+  .schedule-table td {
+    padding: 7px 8px;
+    text-align: right;
+    color: var(--text);
+    border-bottom: 0.5px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 11.5px;
+  }
+  .schedule-table td:first-child { text-align: left; color: var(--text2); font-family: 'DM Sans', monospace; }
+  .schedule-table tr.prepaid td { color: var(--green); }
+  .schedule-table tr:last-child td { border-bottom: none; }
+  .schedule-table tr:hover td { background: var(--surface2); }
+
+  .show-more {
+    width: 100%;
+    padding: 9px;
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text3);
+    background: transparent;
+    border: 0.5px dashed var(--border-med);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all .15s;
+  }
+  .show-more:hover { background: var(--surface2); color: var(--text2); }
+
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+  .table-header select {
+    font-size: 12px;
+    font-family: 'DM Sans', sans-serif;
+    padding: 5px 10px;
+    border: 0.5px solid var(--border-med);
+    border-radius: 8px;
+    background: var(--surface2);
+    color: var(--text);
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    padding-right: 22px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6' fill='none' stroke='%239B9A95' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+  }
+
+  .divider { height: 0.5px; background: var(--border); margin: 1rem 0; }
+
+  /* Prepay none msg */
+  .prepay-hint { font-size: 12px; color: var(--text3); line-height: 1.6; }
+
+  /* Select arrow fix */
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6' fill='none' stroke='%239B9A95' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    cursor: pointer;
+  }
+
+  /* Responsive */
+  @media(max-width: 520px) {
+    .metrics { grid-template-columns: 1fr 1fr; }
+    .grid3 { grid-template-columns: 1fr 1fr; }
+    h1 { font-size: 19px; }
+    .metric .m-val { font-size: 17px; }
+    body { padding: 1.25rem 0.875rem 3rem; }
+  }
+  @media(max-width: 380px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .metrics { grid-template-columns: 1fr; }
+  }
+
+  /* Animation */
+  .card, .metrics, .savings-card {
+    animation: fadeUp .3s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Loan Calculator</h1>
+  <p class="subtitle">Real-time EMI, prepayment impact & amortization</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="setType('personal',this)">Personal</button>
+    <button class="tab" onclick="setType('vehicle',this)">Vehicle</button>
+    <button class="tab" onclick="setType('home',this)">Home</button>
+  </div>
+
+  <!-- Loan Details -->
+  <div class="card">
+    <div class="section-label">Loan details</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="field">
+        <label>Loan amount (₹)</label>
+        <input type="number" id="amount" value="500000" min="1000" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Interest rate (% p.a.)</label>
+        <input type="number" id="rate" value="10.5" min="0.1" max="50" step="0.1" oninput="calc()">
+      </div>
+    </div>
+
+    <div class="toggle-row">
+      <span class="toggle-label">Calculate by</span>
+      <div class="pill-toggle">
+        <button class="active" id="btn-tenure" onclick="setMode('tenure')">Tenure → EMI</button>
+        <button id="btn-emi" onclick="setMode('emi')">EMI → Tenure</button>
+      </div>
+    </div>
+
+    <div id="tenure-inputs" class="grid3">
+      <div class="field">
+        <label>Years</label>
+        <input type="number" id="years" value="5" min="0" max="30" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>Months</label>
+        <input type="number" id="months" value="0" min="0" max="11" oninput="calc()">
+      </div>
+      <div class="field">
+        <label>EMI (₹)</label>
+        <input type="number" id="emi-display" readonly tabindex="-1">
+        <span class="hint">Auto-calculated</span>
+      </div>
+    </div>
+
+    <div id="emi-inputs" style="display:none">
+      <div class="grid2">
+        <div class="field">
+          <label>Desired EMI (₹)</label>
+          <input type="number" id="emi-want" value="10000" min="100" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Tenure (months)</label>
+          <input type="number" id="tenure-display" readonly tabindex="-1">
+          <span class="hint">Auto-calculated</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prepayments -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="section-label" style="margin:0">Prepayments</div>
+      <div class="pill-toggle">
+        <button class="active" id="pf-none" onclick="setPrepayFreq('none')">None</button>
+        <button id="pf-monthly" onclick="setPrepayFreq('monthly')">Monthly</button>
+        <button id="pf-annual" onclick="setPrepayFreq('annual')">Annual</button>
+        <button id="pf-both" onclick="setPrepayFreq('both')">Both</button>
+      </div>
+    </div>
+
+    <div id="prepay-fields" style="display:none">
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="field" id="mpf-wrap">
+          <label>Monthly prepayment (₹)</label>
+          <input type="number" id="monthly-prepay" value="2000" min="0" oninput="calc()">
+        </div>
+        <div class="field" id="apf-wrap" style="display:none">
+          <label>Annual prepayment (₹)</label>
+          <input type="number" id="annual-prepay" value="20000" min="0" oninput="calc()">
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Starting from month</label>
+          <input type="number" id="prepay-start" value="1" min="1" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Prepayment reduces</label>
+          <select id="prepay-mode" onchange="calc()">
+            <option value="tenure">Tenure (keep EMI same)</option>
+            <option value="emi">EMI (keep tenure same)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div id="prepay-none-msg" class="prepay-hint">Enable prepayments to see how much interest and time you can save.</div>
+  </div>
+
+  <!-- Metrics -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="m-label">Monthly EMI</div>
+      <div class="m-val" id="m-emi">—</div>
+      <div class="m-sub" id="m-emi-sub"></div>
+    </div>
+    <div class="metric">
+      <div class="m-label">Total interest</div>
+      <div class="m-val" id="m-interest">—</div>
+      <div class="m-sub" id="m-int-sub"></div>
+    </div>
+    <div class="metric">
+      <div class="m-label">Total payment</div>
+      <div class="m-val" id="m-total">—</div>
+      <div class="m-sub" id="m-tot-sub"></div>
+    </div>
+  </div>
+
+  <!-- Savings -->
+  <div class="savings-card" id="savings-card">
+    <div class="section-label">Prepayment impact</div>
+    <div class="grid3" style="gap:10px">
+      <div class="metric" style="margin:0">
+        <div class="m-label">Interest saved</div>
+        <div class="m-val" id="s-int">—</div>
+      </div>
+      <div class="metric" style="margin:0">
+        <div class="m-label">Time saved</div>
+        <div class="m-val" id="s-time">—</div>
+      </div>
+      <div class="metric" style="margin:0">
+        <div class="m-label">New tenure</div>
+        <div class="m-val" id="s-tenure" style="color:var(--text)">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breakup -->
+  <div class="card">
+    <div class="section-label">Breakup</div>
+    <div style="margin-bottom:8px">
+      <div class="bar-track"><div class="bar-fill" id="bar-principal" style="background:var(--green)"></div></div>
+      <div class="bar-track"><div class="bar-fill" id="bar-interest" style="background:var(--amber)"></div></div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Principal <strong id="leg-p">—</strong></div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div>Interest <strong id="leg-i">—</strong></div>
+      <div class="legend-item" id="leg-pp-wrap" style="display:none">
+        <div class="legend-dot" style="background:#5DA04A"></div>Prepaid <strong id="leg-pp">—</strong>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="myChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Amortization -->
+  <div class="card">
+    <div class="table-header">
+      <div class="section-label" style="margin:0">Amortization schedule</div>
+      <select id="view-mode" onchange="updateChart();renderTable()">
+        <option value="monthly">Monthly</option>
+        <option value="yearly">Yearly</option>
+      </select>
+    </div>
+    <div id="table-wrap" style="overflow-x:auto"></div>
+    <button class="show-more" id="show-more-btn" onclick="toggleRows()" style="display:none">Show all rows</button>
+  </div>
+</div>
+
+<script>
+let loanType='personal', calcMode='tenure', prepayFreq='none', schedule=[], showAllRows=false, chart=null;
+
+const defaults = {
+  personal: {rate:10.5, years:5, amount:500000},
+  vehicle:  {rate:8.5,  years:7, amount:800000},
+  home:     {rate:8.75, years:20, amount:5000000}
+};
+
+function fmt(n){ return '₹'+Math.round(n).toLocaleString('en-IN'); }
+function fmtC(n){
+  if(n>=10000000) return '₹'+(n/10000000).toFixed(2)+'Cr';
+  if(n>=100000)   return '₹'+(n/100000).toFixed(2)+'L';
+  return fmt(n);
+}
+
+function setType(t, el){
+  loanType = t;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  const d = defaults[t];
+  document.getElementById('amount').value = d.amount;
+  document.getElementById('rate').value   = d.rate;
+  document.getElementById('years').value  = d.years;
+  document.getElementById('months').value = 0;
+  calc();
+}
+
+function setMode(m){
+  calcMode = m;
+  document.getElementById('btn-tenure').classList.toggle('active', m==='tenure');
+  document.getElementById('btn-emi').classList.toggle('active', m==='emi');
+  document.getElementById('tenure-inputs').style.display = m==='tenure' ? 'grid' : 'none';
+  document.getElementById('emi-inputs').style.display    = m==='emi'    ? 'block': 'none';
+  calc();
+}
+
+function setPrepayFreq(f){
+  prepayFreq = f;
+  ['none','monthly','annual','both'].forEach(x =>
+    document.getElementById('pf-'+x).classList.toggle('active', x===f)
+  );
+  const show = f !== 'none';
+  document.getElementById('prepay-fields').style.display   = show ? 'block' : 'none';
+  document.getElementById('prepay-none-msg').style.display = show ? 'none'  : 'block';
+  document.getElementById('mpf-wrap').style.display = (f==='monthly'||f==='both') ? 'block' : 'none';
+  document.getElementById('apf-wrap').style.display = (f==='annual' ||f==='both') ? 'block' : 'none';
+  document.getElementById('savings-card').style.display    = show ? 'flex'  : 'none';
+  document.getElementById('leg-pp-wrap').style.display     = show ? 'flex'  : 'none';
+  calc();
+}
+
+function calcEMI(P, r, n){
+  if(r === 0) return P/n;
+  const rm = r/1200;
+  return P * rm * Math.pow(1+rm, n) / (Math.pow(1+rm, n) - 1);
+}
+
+function calcBaseInterest(P, r, n){
+  return calcEMI(P, r, n) * n - P;
+}
+
+function buildSchedule(P, rAnnual, totalMonths, mp, ap, prepayStart){
+  const rm = rAnnual / 1200;
+  const baseEMI = calcEMI(P, rAnnual, totalMonths);
+  let bal = P, rows = [];
+  for(let mo = 1; mo <= totalMonths && bal > 0.5; mo++){
+    const interest  = bal * rm;
+    let principal   = baseEMI - interest;
+    if(principal > bal) principal = bal;
+    let prepaid = 0;
+    if(mo >= prepayStart){
+      if(prepayFreq==='monthly'||prepayFreq==='both') prepaid += mp;
+      if((prepayFreq==='annual'||prepayFreq==='both') && mo%12===0) prepaid += ap;
+      const maxPrepay = Math.max(0, bal - principal);
+      if(prepaid > maxPrepay) prepaid = maxPrepay;
+    }
+    bal -= (principal + prepaid);
+    if(bal < 0) bal = 0;
+    rows.push({month:mo, emi:baseEMI, interest, principal, prepaid, balance:bal, hasPrepay:prepaid>0});
+  }
+  return rows;
+}
+
+function calc(){
+  const P = +document.getElementById('amount').value || 0;
+  const r = +document.getElementById('rate').value   || 0;
+  let totalMonths, emi;
+
+  if(calcMode === 'tenure'){
+    const y = +document.getElementById('years').value  || 0;
+    const m = +document.getElementById('months').value || 0;
+    totalMonths = y*12 + m;
+    if(totalMonths < 1 || P < 1) return;
+    emi = calcEMI(P, r, totalMonths);
+    document.getElementById('emi-display').value = Math.round(emi);
+  } else {
+    emi = +document.getElementById('emi-want').value || 0;
+    if(emi < 1 || P < 1 || r < 0.01) return;
+    const rm = r/1200;
+    totalMonths = rm === 0
+      ? Math.ceil(P/emi)
+      : Math.ceil(-Math.log(1 - P*rm/emi) / Math.log(1+rm));
+    if(totalMonths <= 0 || !isFinite(totalMonths)){
+      document.getElementById('tenure-display').value = 'N/A';
+      return;
+    }
+    document.getElementById('tenure-display').value = totalMonths;
+  }
+
+  const mp = +document.getElementById('monthly-prepay').value || 0;
+  const ap = +document.getElementById('annual-prepay').value  || 0;
+  const ps = +document.getElementById('prepay-start').value   || 1;
+
+  schedule = buildSchedule(P, r, totalMonths, mp, ap, ps);
+
+  const totalInt     = schedule.reduce((s,r)=>s+r.interest,  0);
+  const totalPrinc   = schedule.reduce((s,r)=>s+r.principal, 0);
+  const totalPrepaid = schedule.reduce((s,r)=>s+r.prepaid,   0);
+  const totalPaid    = schedule.reduce((s,r)=>s+r.emi+r.prepaid, 0);
+  const actualMonths = schedule.length;
+
+  document.getElementById('m-emi').textContent      = fmtC(emi);
+  document.getElementById('m-interest').textContent = fmtC(totalInt);
+  document.getElementById('m-total').textContent    = fmtC(totalPaid);
+  document.getElementById('m-emi-sub').textContent  = `${Math.floor(actualMonths/12)}y ${actualMonths%12}m tenure`;
+  document.getElementById('m-int-sub').textContent  = `${((totalInt/totalPaid)*100).toFixed(1)}% of total`;
+  document.getElementById('m-tot-sub').textContent  = 'Principal + interest';
+
+  const tot = totalPrinc + totalInt + totalPrepaid;
+  document.getElementById('bar-principal').style.width = ((totalPrinc/tot)*100).toFixed(1)+'%';
+  document.getElementById('bar-interest').style.width  = ((totalInt/tot)*100).toFixed(1)+'%';
+  document.getElementById('leg-p').textContent  = fmtC(totalPrinc);
+  document.getElementById('leg-i').textContent  = fmtC(totalInt);
+  document.getElementById('leg-pp').textContent = fmtC(totalPrepaid);
+
+  if(prepayFreq !== 'none'){
+    const baseInt  = calcBaseInterest(P, r, totalMonths);
+    const saved    = baseInt - totalInt;
+    const timeSaved= totalMonths - actualMonths;
+    document.getElementById('s-int').textContent    = fmtC(Math.max(0, saved));
+    document.getElementById('s-time').textContent   = `${Math.floor(timeSaved/12)}y ${timeSaved%12}m`;
+    document.getElementById('s-tenure').textContent = `${Math.floor(actualMonths/12)}y ${actualMonths%12}m`;
+  }
+
+  updateChart();
+  renderTable();
+}
+
+function updateChart(){
+  const ctx = document.getElementById('myChart').getContext('2d');
+  const isYearly = document.getElementById('view-mode').value === 'yearly';
+  let labels=[], principalData=[], interestData=[], prepaidData=[];
+
+  if(isYearly){
+    const years={};
+    schedule.forEach(r=>{
+      const y = Math.ceil(r.month/12);
+      if(!years[y]) years[y]={p:0,i:0,pp:0};
+      years[y].p+=r.principal; years[y].i+=r.interest; years[y].pp+=r.prepaid;
+    });
+    Object.entries(years).forEach(([y,v])=>{
+      labels.push('Y'+y);
+      principalData.push(Math.round(v.p));
+      interestData.push(Math.round(v.i));
+      prepaidData.push(Math.round(v.pp));
+    });
+  } else {
+    schedule.slice(0,72).forEach(r=>{
+      labels.push('M'+r.month);
+      principalData.push(Math.round(r.principal));
+      interestData.push(Math.round(r.interest));
+      prepaidData.push(Math.round(r.prepaid));
+    });
+  }
+
+  const datasets = [
+    {label:'Principal', data:principalData, backgroundColor:'#3D7A5C', stack:'s', borderRadius:2},
+    {label:'Interest',  data:interestData,  backgroundColor:'#B87A4E', stack:'s', borderRadius:2},
+  ];
+  if(prepayFreq !== 'none')
+    datasets.push({label:'Prepaid', data:prepaidData, backgroundColor:'#5DA04A', stack:'s', borderRadius:2});
+
+  if(chart){ chart.destroy(); }
+  chart = new Chart(ctx, {
+    type:'bar',
+    data:{labels, datasets},
+    options:{
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label: i => i.dataset.label+': ₹'+i.raw.toLocaleString('en-IN')
+          }
+        }
+      },
+      scales:{
+        x:{stacked:true, grid:{display:false}, ticks:{font:{size:10}, maxRotation:45, color:'#9B9A95'}},
+        y:{stacked:true, grid:{color:'rgba(0,0,0,0.04)'}, ticks:{font:{size:10}, color:'#9B9A95', callback:v=>'₹'+Math.round(v/1000)+'k'}}
+      },
+      maintainAspectRatio:false,
+      responsive:true,
+      animation:{duration:400}
+    }
+  });
+}
+
+function renderTable(){
+  const isYearly = document.getElementById('view-mode').value === 'yearly';
+  const wrap = document.getElementById('table-wrap');
+  const btn  = document.getElementById('show-more-btn');
+  let rows = [];
+
+  if(isYearly){
+    const years={};
+    schedule.forEach(r=>{
+      const y = Math.ceil(r.month/12);
+      if(!years[y]) years[y]={emi:0,principal:0,interest:0,prepaid:0,balance:0,hasPrepay:false};
+      years[y].emi+=r.emi; years[y].principal+=r.principal; years[y].interest+=r.interest;
+      years[y].prepaid+=r.prepaid; years[y].balance=r.balance;
+      if(r.hasPrepay) years[y].hasPrepay=true;
+    });
+    rows = Object.entries(years).map(([y,v])=>({key:'Year '+y, ...v}));
+  } else {
+    rows = schedule.map(r=>({key:'Month '+r.month, ...r}));
+  }
+
+  const max = showAllRows ? rows.length : Math.min(12, rows.length);
+  btn.style.display = rows.length > 12 ? 'block' : 'none';
+  btn.textContent   = showAllRows ? 'Show fewer rows' : 'Show all '+rows.length+' rows';
+
+  const head = `<tr>
+    <th>Period</th><th>EMI</th><th>Principal</th><th>Interest</th><th>Prepaid</th><th>Balance</th>
+  </tr>`;
+  const body = rows.slice(0, max).map(r=>`
+    <tr class="${r.hasPrepay?'prepaid':''}">
+      <td>${r.key}</td>
+      <td>${fmtC(r.emi)}</td>
+      <td>${fmtC(r.principal)}</td>
+      <td>${fmtC(r.interest)}</td>
+      <td>${r.prepaid>0 ? fmtC(r.prepaid) : '—'}</td>
+      <td>${fmtC(r.balance)}</td>
+    </tr>`).join('');
+
+  wrap.innerHTML = `<table class="schedule-table"><thead>${head}</thead><tbody>${body}</tbody></table>`;
+}
+
+function toggleRows(){ showAllRows = !showAllRows; renderTable(); }
+
+calc();
+</script>
+</body>
+</html>
